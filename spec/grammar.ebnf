@@ -1,0 +1,55 @@
+Program = PackageDef {Element}.
+
+PackageDef = "package" SomeWhitespace PackageName.
+PackageName = Lowercase {Lowercase}.
+
+Element = {Whitespace} (Comment | Newline | Requirement | Thing | Function | FunctionCall | Var | Const) {SomeWhitespace} Newline.
+
+Comment = "//" {Words | SomeWhitespace}.
+
+Requirement = "require" SomeWhitespace StdlibRequire | RelativeRequire.
+StdlibRequire = "<" {Alpha | Symbol} ">".
+RelativeRequire = "\"" {Alpha | Symbol} "\"".
+
+Thing = "thing" SomeWhitespace Identifier {Whitespace} OpenBrace Newline {Super | Internal | Element} Newline CloseBrace.
+Super = {Whitespace} "super" SomeWhitespace ExternalIdentifier Newline.
+
+Function = "f" SomeWhitespace Identifier Args Rocket Args {Whitespace} OpenBrace Newline {Element} Newline CloseBrace.
+FunctionCall = ExternalIdentifier Args.
+
+Internal = {Whitespace} "internal" SomeWhitespace Identifier SomeWhitespace Assignment Newline.
+Var = {Whitespace} "var" SomeWhitespace Identifier SomeWhitespace Assignment Newline.
+Const = {Whitespace} "const" SomeWhitespace Identifier SomeWhitespace Assignment Newline.
+
+// First Identifier is a Var name can be omitted or set to "_" to ignore
+Arg = [Identifier | "_"] {Whitespace} Identifier.
+Args = OpenBracket {Arg} CloseBracket.
+
+Identifier = {Alpha}.
+ExternalIdentifier = Lowercase {Lowercase} "." Uppercase {Alpha}.
+
+Assignment = Arg SomeWhitespace "=" SomeWhitespace (Quotes Words Quotes) | Number | Alpha | FunctionCall.
+
+// Just all kinds of arbitrary values and stuff *)
+Lowercase = "a...z".
+Uppercase = "A...Z".
+Symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">" | "\\" | "=" | "|" | "." | "." | "/" | "-" | "_".
+Numeral = "0...9".
+
+OpenBrace = "{".
+CloseBrace = "}".
+
+OpenBracket = "(".
+CloseBracket = ")".
+
+Rocket = Whitespace "->" Whitespace.
+
+Alpha = Lowercase | Uppercase.
+Number = Numeral {"." | Numeral}.
+ANS = Lowercase | Uppercase | Symbol | Whitespace.
+Words = ANS {ANS}.
+Quotes = "\"" | "'".
+
+Whitespace = " " | "\t".
+SomeWhitespace = Whitespace {Whitespace}.
+Newline = "\n" | "\r\n".
