@@ -1,36 +1,37 @@
 Program = PackageDef {Element}.
 
-PackageDef = "package" SomeWhitespace PackageName.
+PackageDef = "package" PackageName.
 PackageName = Lowercase {Lowercase}.
 
-Element = {Whitespace} (Comment | Newline | Requirement | Thing | Function | FunctionCall | Var | Const) {SomeWhitespace} Newline.
+Element = (Comment | Newline | Requirement | Thing | Function | FunctionCall | Var | Const).
 
-Comment = "//" {Words | SomeWhitespace}.
+Comment = CommentStart { Words } Newline.
+CommentStart = "//".
 
-Requirement = "require" SomeWhitespace StdlibRequire | RelativeRequire.
+Requirement = "require" StdlibRequire | RelativeRequire.
 StdlibRequire = "<" {Alpha | Symbol} ">".
 RelativeRequire = "\"" {Alpha | Symbol} "\"".
 
-Thing = "thing" SomeWhitespace Identifier {Whitespace} OpenBrace Newline {Super | Internal | Element} Newline CloseBrace.
-Super = {Whitespace} "super" SomeWhitespace ExternalIdentifier Newline.
+Thing = "thing" Identifier OpenBrace Newline {Super | Internal | Element} Newline CloseBrace.
+Super = "super" ExternalIdentifier Newline.
 
-Function = "f" SomeWhitespace Identifier Args Rocket Args {Whitespace} OpenBrace Newline {Element} Newline CloseBrace.
+Function = "f" Identifier Args Rocket Args OpenBrace Newline {Element} Newline CloseBrace.
 FunctionCall = ExternalIdentifier Args.
 
-Internal = {Whitespace} "internal" SomeWhitespace Identifier SomeWhitespace Assignment Newline.
-Var = {Whitespace} "var" SomeWhitespace Identifier SomeWhitespace Assignment Newline.
-Const = {Whitespace} "const" SomeWhitespace Identifier SomeWhitespace Assignment Newline.
+Internal = "internal" Identifier Assignment Newline.
+Var = "var" Identifier Assignment Newline.
+Const =  "const" Identifier Assignment Newline.
 
 // First Identifier is a Var name can be omitted or set to "_" to ignore
-Arg = [Identifier | "_"] {Whitespace} Identifier.
+Arg = [Identifier | "_"] SomeWhitespace Identifier.
 Args = OpenBracket {Arg} CloseBracket.
 
 Identifier = {Alpha}.
 ExternalIdentifier = Lowercase {Lowercase} "." Uppercase {Alpha}.
 
-Assignment = Arg SomeWhitespace "=" SomeWhitespace (Quotes Words Quotes) | Number | Alpha | FunctionCall.
+Assignment = Arg "=" (Quotes Words Quotes) | Number | Alpha | FunctionCall.
 
-// Just all kinds of arbitrary values and stuff *)
+// Just all kinds of arbitrary values and stuff
 Lowercase = "a...z".
 Uppercase = "A...Z".
 Symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">" | "\\" | "=" | "|" | "." | "." | "/" | "-" | "_".
@@ -42,7 +43,7 @@ CloseBrace = "}".
 OpenBracket = "(".
 CloseBracket = ")".
 
-Rocket = Whitespace "->" Whitespace.
+Rocket = "->".
 
 Alpha = Lowercase | Uppercase.
 Number = Numeral {"." | Numeral}.
