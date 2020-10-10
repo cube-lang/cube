@@ -77,6 +77,7 @@ require_decl : TREQUIRE TCLT ident TCGT { $$ = new NStdlibRequirementDeclaration
 
 var_decl : TVAR ident ident TEQUAL expr { $$ = new NVariableDeclaration(*$2, *$3, $5); }
          | TVAR ident ident { $$ = new NVariableDeclaration(*$2, *$3); }
+        |       ident ident { $$ = new NVariableDeclaration(*$1, *$2); }
          ;
 
 const_decl : TCONST ident ident TEQUAL expr { $$ = new NConstDeclaration(*$2, *$3, $5); }
@@ -92,8 +93,8 @@ super_decl : TSUPER ident { $$ = new NSuperDeclaration(*$2); }
 thing_decl : TTHING ident block { $$ = new NThingDeclaration(*$2, *$3); }
          ;
 
-func_decl : ident ident TLPAREN func_decl_args TRPAREN TROCKET TLPAREN func_decl_args TRPAREN block
- { $$ = new NFunctionDeclaration(*$1, *$2, *$4, *$8, *$10); delete $4; delete $8; }
+func_decl : TFUNC ident TLPAREN func_decl_args TRPAREN TROCKET TLPAREN ident TRPAREN block
+ { $$ = new NFunctionDeclaration(*$2, *$4, *$8, *$10); delete $4; }
           ;
 
 func_decl_args : /*blank*/  { $$ = new VariableList(); }

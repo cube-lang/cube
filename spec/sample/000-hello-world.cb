@@ -1,0 +1,6 @@
+package main
+
+f main() -> (int) {
+	print("Hello, world!")
+	return 0
+}

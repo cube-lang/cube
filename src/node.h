@@ -15,7 +15,7 @@ typedef std::vector<NExpression*> ExpressionList;
 typedef std::vector<NVariableDeclaration*> VariableList;
 typedef std::vector<NConstDeclaration*> ConstList;
 typedef std::vector<NInternalDeclaration*> InternalList;
-typedef std::vector<NFunction*> FuntionList;
+typedef std::vector<NFunction*> FunctionList;
 
 class Node {
  public:
@@ -127,15 +127,15 @@ class NExpressionStatement : public NStatement {
 
 class NVariableDeclaration : public NStatement {
  public:
-  const NIdentifier& type;
+  NIdentifier& type;
   NIdentifier& id;
   NExpression *assignmentExpr;
 
- NVariableDeclaration(const NIdentifier& type,
+ NVariableDeclaration(NIdentifier& type,
                       NIdentifier& id) :
   type(type), id(id) { }
 
- NVariableDeclaration(const NIdentifier& type,
+ NVariableDeclaration(NIdentifier& type,
                       NIdentifier& id,
                       NExpression *assignmentExpr) :
   type(type), id(id), assignmentExpr(assignmentExpr) { }
@@ -181,18 +181,16 @@ class NInternalDeclaration : public NStatement {
 
 class NFunctionDeclaration : public NStatement {
  public:
-  const NIdentifier& type;
+  NIdentifier& type;
   const NIdentifier& id;
   VariableList arguments;
-  VariableList returners;
   NBlock& block;
 
- NFunctionDeclaration(const NIdentifier& type,
-                      const NIdentifier& id,
+ NFunctionDeclaration(const NIdentifier& id,
                       const VariableList& arguments,
-                      const VariableList& returners,
+                      NIdentifier& type,
                       NBlock& block) :
-   type(type), id(id), arguments(arguments), returners(returners), block(block) { }
+   id(id), arguments(arguments), type(type), block(block) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };

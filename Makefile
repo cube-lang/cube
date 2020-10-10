@@ -1,11 +1,34 @@
-all: build/ build/parser.cpp build/tokens.cpp
+all: cube
+
+OBJS = build/parser.o  \
+	build/codegen.o \
+	build/main.o    \
+	build/tokens.o  \
+
+LLVMCONFIG = llvm-config
+CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++14
+LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic
+LIBS = `$(LLVMCONFIG) --libs`
+
+.PHONY: clean
+clean:
+	$(RM) -rfv build/
 
 build/:
-	mkdir -p $@
+	mkdir -vp $@
 	cp -v src/* $@
 
-build/parser.cpp:
-	cd build/ &&  bison -d -o parser.cpp parser.y
+build/parser.cpp: build/parser.y
+	bison -d -o $@ $^
 
-build/tokens.cpp:
-	cd build/ && lex -o tokens.cpp tokens.l
+build/parser.hpp: build/parser.cpp
+
+build/tokens.cpp: build/tokens.l build/parser.hpp
+	flex -o $@ $^
+
+%.o: %.cpp
+	g++ -c $(CPPFLAGS) -o $@ $<
+
+
+cube: build/ $(OBJS)
+	g++ -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
