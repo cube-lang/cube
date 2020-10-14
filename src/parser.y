@@ -32,8 +32,9 @@
 %token <token> TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
 %token <token> TPLUS TMINUS TMUL TDIV TDQUOTE TSQUOTE
 
-%token  <token>         TCOMMENT TROCKET TPACKAGE TREQUIRE TVAR
+%token  <token>         TCOMMENT TROCKET TPACKAGE TREQUIRE TVAR TRETURN TCHAR
 %token  <token>         TCONST TINTERNAL TTHING TSUPER TFUNC TRSQUARE TLSQUARE
+%token  <token>         TSTRTYPE TINTTYPE TFLOATTYPE
 
 /* Define the type of node our nonterminal symbols represent.
    The types refer to the %union declaration above. Ex: when
@@ -41,11 +42,11 @@
    calling an (NIdentifier*). It makes the compiler happy.
  */
 %type <ident> ident
-%type <expr> numeric expr
+%type <expr> numeric expr string string_chars
 %type <varvec> func_decl_args
 %type <exprvec> call_args
 %type <block> program stmts block
-%type <stmt> stmt var_decl func_decl const_decl internal_decl super_decl thing_decl require_decl
+%type <stmt> stmt var_decl func_decl const_decl internal_decl super_decl thing_decl require_decl ret
 %type <token> comparison
 
 /* Operator precedence for mathematical operators */
@@ -65,6 +66,7 @@ stmts : stmt { $$ = new NBlock(); $$->statements.push_back($<stmt>1); }
 
 stmt : var_decl | func_decl | const_decl | internal_decl | super_decl | thing_decl
      | expr { $$ = new NExpressionStatement(*$1); }
+     | TRETURN expr { $$ = new NReturn(*$2); }
      ;
 
 block : TLBRACE stmts TRBRACE { $$ = $2; }
@@ -77,7 +79,7 @@ require_decl : TREQUIRE TCLT ident TCGT { $$ = new NStdlibRequirementDeclaration
 
 var_decl : TVAR ident ident TEQUAL expr { $$ = new NVariableDeclaration(*$2, *$3, $5); }
          | TVAR ident ident { $$ = new NVariableDeclaration(*$2, *$3); }
-        |       ident ident { $$ = new NVariableDeclaration(*$1, *$2); }
+         | ident ident { $$ = new NVariableDeclaration(*$1, *$2); }
          ;
 
 const_decl : TCONST ident ident TEQUAL expr { $$ = new NConstDeclaration(*$2, *$3, $5); }
@@ -108,6 +110,12 @@ ident : TIDENTIFIER { $$ = new NIdentifier(*$1); delete $1; }
 numeric : TINTEGER { $$ = new NInteger(atol($1->c_str())); delete $1; }
         | TDOUBLE { $$ = new NDouble(atof($1->c_str())); delete $1; }
         ;
+
+string : TDQUOTE string_chars TDQUOTE { $$ = new NString(*$2); }
+       ;
+
+string_chars : TCHAR | string_chars TCHAR
+             ;
 
 expr : ident TEQUAL expr { $$ = new NAssignment(*$<ident>1, *$3); }
      | ident TLPAREN call_args TRPAREN { $$ = new NMethodCall(*$1, *$3); delete $3; }

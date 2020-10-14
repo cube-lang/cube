@@ -17,12 +17,16 @@
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
 
 using namespace llvm;
 
 class NProgram;
 
 static LLVMContext MyContext;
+static std::string RealMainName = "__cube_real_main";
 
 class CodeGenBlock {
 public:
@@ -32,20 +36,23 @@ public:
 };
 
 class CodeGenContext {
-    std::stack<CodeGenBlock *> blocks;
-    Function *mainFunction;
+  std::stack<CodeGenBlock *> blocks;
+  //Function *mainFunction;
+  Function *_real_main;
 
 public:
 
-    Module *module;
-    CodeGenContext() { module = new Module("main", MyContext); }
+  Module *module;
+  CodeGenContext() { module = new Module("main", MyContext); }
 
   void generateCode(NProgram& root);
-    GenericValue runCode();
-    std::map<std::string, Value*>& locals() { return blocks.top()->locals; }
-    BasicBlock *currentBlock() { return blocks.top()->block; }
-    void pushBlock(BasicBlock *block) { blocks.push(new CodeGenBlock()); blocks.top()->returnValue = NULL; blocks.top()->block = block; }
-    void popBlock() { CodeGenBlock *top = blocks.top(); blocks.pop(); delete top; }
-    void setCurrentReturnValue(Value *value) { blocks.top()->returnValue = value; }
-    Value* getCurrentReturnValue() { return blocks.top()->returnValue; }
+  GenericValue runCode();
+  std::map<std::string, Value*>& locals() { return blocks.top()->locals; }
+  BasicBlock *currentBlock() { return blocks.top()->block; }
+  void pushBlock(BasicBlock *block) { blocks.push(new CodeGenBlock()); blocks.top()->returnValue = NULL; blocks.top()->block = block; }
+  void popBlock() { CodeGenBlock *top = blocks.top(); blocks.pop(); delete top; }
+  void setCurrentReturnValue(Value *value) { blocks.top()->returnValue = value; }
+  Value* getCurrentReturnValue() { return blocks.top()->returnValue; }
 };
+
+bool isMain(CodeGenContext& context);

@@ -4,6 +4,7 @@ OBJS = build/parser.o  \
 	build/codegen.o \
 	build/main.o    \
 	build/tokens.o  \
+	build/core.o  \
 
 LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++14

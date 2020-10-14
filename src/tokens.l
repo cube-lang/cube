@@ -19,7 +19,7 @@ extern "C" int yywrap() { }
 "thing"                 return TOKEN(TTHING);
 "super"                 return TOKEN(TSUPER);
 "f"                     return TOKEN(TFUNC);
-
+"return"                return TOKEN(TRETURN);
 
 [ \t\n]                 ;
 [a-zA-Z_][a-zA-Z0-9_]*  SAVE_TOKEN; return TIDENTIFIER;

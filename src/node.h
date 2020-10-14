@@ -47,6 +47,15 @@ class NDouble : public NExpression {
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
+class NString : public NExpression {
+ public:
+  std::string value;
+
+  NString(std::string value) : value(value) { }
+
+  virtual llvm::Value* codeGen(CodeGenContext& context);
+};
+
 class NIdentifier : public NExpression {
  public:
   std::string name;
@@ -232,6 +241,16 @@ class NRelativeRequirementDeclaration : public NStatement {
 
   NRelativeRequirementDeclaration(const NIdentifier& packageID):
     packageID(packageID) { }
+
+  virtual llvm::Value* codeGen(CodeGenContext& context);
+};
+
+class NReturn : public NStatement {
+ public:
+  NExpression& expression;
+
+  NReturn(NExpression& expression):
+    expression(expression) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
