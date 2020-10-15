@@ -11,15 +11,15 @@ llvm::Function* createPrintfFunction(CodeGenContext& context);
 
 int main(int argc, char **argv)
 {
-    yyparse();
-    std::cout << programBlock << std::endl;
+  yyparse();
+  std::cout << programBlock << std::endl;
 
-    CodeGenContext context;
-    createPrintfFunction(context);
-    context.generateCode(*programBlock);
+  CodeGenContext context;
+  createPrintfFunction(context);
+  context.generateCode(*programBlock);
+  context.buildAndWriteObject();
 
-    std::cout << "Running" << std::endl;
-
-    context.runCode();
-    return 0;
+  std::cout << "Running" << std::endl;
+  context.runCode();
+  return 0;
 }

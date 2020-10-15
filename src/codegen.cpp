@@ -4,41 +4,45 @@
 
 using namespace std;
 
-std::string _package {};
-Function *_main {};
-Function *_real_main {};
-
 /* Compile the AST into a module */
 void CodeGenContext::generateCode(NProgram& root)
 {
   std::cout << "Generating code...\n";
 
   // Ensure package is 'main'
-  _package = root.package.name;
+  std::string packageName = root.package.name;
 
-  if (_package != "main") {
-    throw std::runtime_error("invalid package " + _package);
+  if (packageName != execPackage) {
+    throw std::runtime_error("invalid package " + packageName + ". expected " + execPackage);
   }
 
   /* Create the top level interpreter function to call as entry */
   llvm::ArrayRef<Type*> argTypes;
 
-  FunctionType *ftype = FunctionType::get(Type::getInt64Ty(MyContext), makeArrayRef(argTypes), false);
-  _real_main = Function::Create(ftype, GlobalValue::InternalLinkage, RealMainName, module);
+  FunctionType *ftype = FunctionType::get(Type::getInt32Ty(MyContext), makeArrayRef(argTypes), false);
+  Function *main = Function::Create(ftype, GlobalValue::ExternalLinkage, realMain, module);
 
-  BasicBlock *bblock = BasicBlock::Create(MyContext, "entry", _real_main, 0);
+  BasicBlock *bblock = BasicBlock::Create(MyContext, "entry", main, 0);
 
   /* Push a new variable/block context */
   pushBlock(bblock);
 
   root.codeGen(*this); /* emit bytecode for the toplevel block */
 
-  if (_main == NULL) {
-    throw std::runtime_error("no main function - generateCode");
+  cout << "built" << endl;
+
+  Function* userMainF = module->getFunction(userMain);
+  if (userMainF == NULL) {
+    throw std::runtime_error("invalid program, missing main() function");
   }
 
+  cout << "add call to " << userMain << ", a function which lives at " << userMainF << endl;
+  cout << "and pointing it at " << bblock << endl;
+
   llvm::ArrayRef<Value*> argValues;
-  CallInst *call = CallInst::Create(_main, makeArrayRef(argValues), "", bblock);
+
+  cout << "args: " << &argValues << endl;
+  CallInst *call = CallInst::Create(userMainF, makeArrayRef(argValues), "", bblock);
 
   std::cout << "Creating return inst" << std::endl;
   ReturnInst::Create(MyContext, call, bblock);
@@ -69,17 +73,68 @@ void CodeGenContext::generateCode(NProgram& root)
 /* Executes the AST by running the main function */
 
 GenericValue CodeGenContext::runCode() {
-  if (_main == NULL) {
-    throw std::runtime_error("no main function - runCode");
-  }
-
   std::cout << "Running code...\n";
   ExecutionEngine *ee = EngineBuilder( unique_ptr<Module>(module) ).create();
   ee->finalizeObject();
   vector<GenericValue> noargs;
-  GenericValue v = ee->runFunction(_real_main, noargs);
+
+  Function *main = module->getFunction(realMain);
+  if (main == NULL) {
+    throw std::runtime_error("invalid program, missing main() function");
+  }
+
+  GenericValue v = ee->runFunction(main, noargs);
   std::cout << "Code was run.\n";
   return v;
+}
+
+void CodeGenContext::buildAndWriteObject() {
+  InitializeAllTargetInfos();
+  InitializeAllTargets();
+  InitializeAllTargetMCs();
+  InitializeAllAsmParsers();
+  InitializeAllAsmPrinters();
+
+  auto TargetTriple = sys::getDefaultTargetTriple();
+  module->setTargetTriple(TargetTriple);
+
+  std::string Error;
+  auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
+
+  // Print an error and exit if we couldn't find the requested target.
+  // This generally occurs if we've forgotten to initialise the
+  // TargetRegistry or we have a bogus target triple.
+  if (!Target) {
+    throw std::runtime_error(Error);
+  }
+
+  auto CPU = "generic";
+  auto Features = "";
+
+  TargetOptions opt;
+  Reloc::Model RM = Reloc::Model::PIC_;
+  auto TheTargetMachine =
+    Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
+
+  module->setDataLayout(TheTargetMachine->createDataLayout());
+
+  auto Filename = "_output.o";
+  std::error_code EC;
+  raw_fd_ostream dest(Filename, EC, sys::fs::OF_None);
+
+  if (EC) {
+    throw std::runtime_error(EC.message());
+  }
+
+  legacy::PassManager pass;
+  auto FileType = CGFT_ObjectFile;
+
+  if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
+    throw std::runtime_error("TheTargetMachine can't emit a file of this type");
+  }
+
+  pass.run(*module);
+  dest.flush();
 }
 
 /* Returns an LLVM type based on the identifier */
@@ -235,13 +290,30 @@ Value* NVariableDeclaration::codeGen(CodeGenContext& context)
 
 Value* NFunctionDeclaration::codeGen(CodeGenContext& context)
 {
+  /*
+    All cube programs define a main() function as their entrypoint.
+    In actual fact, though, we create a main() function of our own which
+    wraps this call, setting stuff up and configuring globals.
+
+    Thus: we rename the user-defined main() to something else. Now: why bother doing
+    this? Why not just have a different entrypoint for users to define?
+
+    A couple of reasons:
+    1. main() is a well known convention for entry points, and so it makes no sense to fuck with it
+    2. we don't want people creating a main() function which fucks us over here
+   */
+  std::string functionName = id.name.c_str();
+  if (id.name == realMain) {
+    functionName = userMain;
+  }
+
   vector<Type*> argTypes;
   VariableList::const_iterator it;
   for (it = arguments.begin(); it != arguments.end(); it++) {
     argTypes.push_back(typeOf((**it).type));
   }
   FunctionType *ftype = FunctionType::get(typeOf(type), makeArrayRef(argTypes), false);
-  Function *function = Function::Create(ftype, GlobalValue::InternalLinkage, id.name.c_str(), context.module);
+  Function *function = Function::Create(ftype, GlobalValue::InternalLinkage, functionName, context.module);
   BasicBlock *bblock = BasicBlock::Create(MyContext, "entry", function, 0);
 
   context.pushBlock(bblock);
@@ -261,11 +333,7 @@ Value* NFunctionDeclaration::codeGen(CodeGenContext& context)
   ReturnInst::Create(MyContext, context.getCurrentReturnValue(), bblock);
 
   context.popBlock();
-  std::cout << "Creating function: " << id.name << endl;
-
-  if (id.name == "main") {
-    _main = function;
-  }
+  std::cout << "Creating function: " << functionName << endl;
 
   return function;
 }
@@ -297,10 +365,10 @@ Value* NInternalDeclaration::codeGen(CodeGenContext& context)
 
 Value* NReturn::codeGen(CodeGenContext& context)
 {
-        std::cout << "Generating return code for " << typeid(expression).name() << endl;
-        Value *returnValue = expression.codeGen(context);
-        context.setCurrentReturnValue(returnValue);
-        return returnValue;
+  std::cout << "Generating return code for " << typeid(expression).name() << endl;
+  Value *returnValue = expression.codeGen(context);
+  context.setCurrentReturnValue(returnValue);
+  return returnValue;
 }
 
 /*
@@ -313,5 +381,5 @@ Value* NReturn::codeGen(CodeGenContext& context)
 bool isMain(CodeGenContext& context)
 {
   std::cout << "Name: " << context.currentBlock()->getParent()->getName().str() << std::endl;
-  return context.currentBlock()->getParent()->getName().str() == RealMainName;
+  return context.currentBlock()->getParent()->getName().str() == realMain;
 }

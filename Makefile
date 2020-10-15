@@ -8,8 +8,8 @@ OBJS = build/parser.o  \
 
 LLVMCONFIG = llvm-config
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++14
-LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic
-LIBS = `$(LLVMCONFIG) --libs`
+LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses
+LIBS = `$(LLVMCONFIG) --system-libs --libs all`
 
 .PHONY: clean
 clean:

@@ -1,6 +1,7 @@
 package main
 
+var int exit_ok = 0
+
 f main() -> (int) {
-	print("Hello, world!")
-	return 0
+  return exit_ok * 2
 }
