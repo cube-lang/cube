@@ -7,7 +7,7 @@ OBJS = build/parser.o  \
 	build/core.o  \
 
 LLVMCONFIG = llvm-config
-CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++14
+CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++20 -lstdc++fs
 LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses
 LIBS = `$(LLVMCONFIG) --system-libs --libs all`
 
