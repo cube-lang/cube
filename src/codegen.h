@@ -30,6 +30,7 @@ using namespace llvm;
 static std::string userMain = "__cube_real_main";
 static std::string realMain = "main";
 static std::string execPackage = "main";
+static std::string extension = ".cb";
 
 class NProgram;
 
