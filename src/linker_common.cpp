@@ -6,12 +6,18 @@ using namespace llvm;
 /* Returns an LLVM type based on the identifier */
 Type* typeOf(NIdentifier& type)
 {
+  // Simple base types
   if (type.name.compare("int") == 0) {
     return Type::getInt64Ty(MyContext);
   }
   else if (type.name.compare("float") == 0) {
     return Type::getDoubleTy(MyContext);
   }
+  // Cube helper types
+  else if (type.name.compare("status") == 0) {
+    return Type::getInt32Ty(MyContext);
+  }
+
   // else if (type.name.compare("string") == 0) {
   //   return
   // }
@@ -27,6 +33,5 @@ Type* typeOf(NIdentifier& type)
  */
 bool isMain(CodeGenContext& context)
 {
-  std::cout << "Name: " << context.currentBlock()->getParent()->getName().str() << std::endl;
   return context.currentBlock()->getParent()->getName().str() == realMain;
 }

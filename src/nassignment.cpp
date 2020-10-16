@@ -3,13 +3,11 @@
 
 // NAssignment::codeGen assigns a value to a local variable
 //
-// In cube we don't really chang globals /shrug
+// In cube we don't really change globals /shrug
 Value* NAssignment::codeGen(CodeGenContext& context)
 {
-  std::cout << "Creating assignment for " << lhs.name << std::endl;
   if (context.locals().find(lhs.name) == context.locals().end()) {
-    std::cerr << "undeclared variable " << lhs.name << std::endl;
-    return NULL;
+    throw std::runtime_error("undeclared variable " + lhs.name);
   }
   return new StoreInst(rhs.codeGen(context), context.locals()[lhs.name], false, context.currentBlock());
 }

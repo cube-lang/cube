@@ -1,7 +1,7 @@
 package main
 
-var int exit_ok = 0
+f main() -> (status) {
+  var status exit_ok = 0
 
-f main() -> (int) {
-  return exit_ok * 2
+  return exit_ok
 }
