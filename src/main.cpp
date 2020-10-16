@@ -29,7 +29,6 @@ int main(int argc, char **argv)
       yyparse();
 
       loaded++;
-      std::cout << "Loaded: " << f << std::endl;
     }
   }
 
@@ -37,14 +36,12 @@ int main(int argc, char **argv)
     throw std::runtime_error("No files were found!");
   }
 
-  std::cout << programBlock << std::endl;
-
   CodeGenContext context;
+  context.debug = *std::getenv(debugEnvVar) == *debugEnvTrue;
+
   createPrintfFunction(context);
   context.generateCode(*programBlock);
   context.buildAndWriteObject();
 
-  std::cout << "Running" << std::endl;
-  context.runCode();
   return 0;
 }

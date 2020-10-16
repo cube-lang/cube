@@ -17,10 +17,10 @@
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/Support/raw_ostream.h>
-#include "llvm/Support/TargetRegistry.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetOptions.h"
+#include <llvm/Support/TargetRegistry.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
@@ -32,7 +32,11 @@ static std::string realMain = "main";
 static std::string execPackage = "main";
 static std::string extension = ".cb";
 
+static const char* debugEnvVar = "CUBE_DEBUG";
+static const char* debugEnvTrue = "1";
+
 class NProgram;
+class NIdentifier;
 
 static LLVMContext MyContext;
 
@@ -48,6 +52,7 @@ class CodeGenContext {
 
 public:
 
+  bool debug;
   Module *module;
   CodeGenContext() { module = new Module("main", MyContext); }
 
@@ -63,3 +68,4 @@ public:
 };
 
 bool isMain(CodeGenContext& context);
+Type* typeOf(NIdentifier& type);

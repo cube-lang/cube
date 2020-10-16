@@ -115,13 +115,20 @@ class NBlock : public NExpression {
 class NProgram : public NExpression {
  public:
   const NIdentifier& package;
+  NIdentifier *mode;
   NBlock programBlock;
 
   NProgram(NIdentifier& package,
            NBlock& programBlock) :
     package(package), programBlock(programBlock) { }
 
+  NProgram(NIdentifier& package,
+           NIdentifier *mode,
+           NBlock& programBlock):
+    package(package), mode(mode), programBlock(programBlock) { }
+
   virtual llvm::Value* codeGen(CodeGenContext& context);
+  bool isSvelte();
 };
 
 class NExpressionStatement : public NStatement {
