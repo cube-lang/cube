@@ -32,6 +32,9 @@ static std::string realMain = "main";
 static std::string execPackage = "main";
 static std::string extension = ".cb";
 
+static std::string rescopePrefix = "__cube_rescoped";
+static std::string rescopeSepr = "__";
+
 static const char* debugEnvVar = "CUBE_DEBUG";
 static const char* debugEnvTrue = "1";
 

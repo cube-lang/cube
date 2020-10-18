@@ -1,6 +1,8 @@
 #include "codegen.h"
 #include "node.h"
 
+static std::string rescopeRename(std::string name, int depth);
+
 // NIdentifier::codeGen returns a Value from a given identifier.
 //
 // In order to do this we:
@@ -38,24 +40,27 @@ Value* NIdentifier::codeGen(CodeGenContext& context)
         return v;
       }
 
+      std::string tmpName = rescopeRename(name, depth);
+
       // Create a temporary variable
       NIdentifier emptyID = NIdentifier("");
-      NIdentifier nameID = NIdentifier(name);
+      NIdentifier nameID = NIdentifier(tmpName);
 
       NVariableDeclaration vd(emptyID, v->getType(), nameID);
       vd.assignmentExpr = NULL;
 
       Value* alloc = vd.codeGen(context);
       if (alloc == NULL) {
-        throw std::runtime_error("could not assign re-scoped value " + name);
+        throw std::runtime_error("could not assign re-scoped value " + tmpName);
       }
 
       StoreInst* store = new StoreInst(v, alloc, false, context.currentBlock());
       if (store == NULL) {
-        throw std::runtime_error("could not store temporary value " + name);
+        throw std::runtime_error("could not store temporary value " + tmpName);
       }
 
       assCount++;
+      name = tmpName;
       return this->codeGen(context);
     }
 
@@ -67,4 +72,9 @@ Value* NIdentifier::codeGen(CodeGenContext& context)
   }
 
   throw std::runtime_error("identifier " + name + " does not exist");
+}
+
+static std::string rescopeRename(std::string name, int depth)
+{
+  return rescopePrefix + rescopeSepr + std::to_string(depth) + rescopeSepr + name;
 }
