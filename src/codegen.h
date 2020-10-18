@@ -1,3 +1,4 @@
+#include <regex>
 #include <stack>
 #include <typeinfo>
 #include <llvm/IR/Module.h>
@@ -34,6 +35,7 @@ static std::string extension = ".cb";
 
 static std::string rescopePrefix = "__cube_rescoped";
 static std::string rescopeSepr = "__";
+static std::regex rescopeRegex("^" + rescopePrefix + rescopeSepr + "\\d+" + rescopeSepr + "(.*)$", std::regex_constants::ECMAScript);
 
 static const char* debugEnvVar = "CUBE_DEBUG";
 static const char* debugEnvTrue = "1";

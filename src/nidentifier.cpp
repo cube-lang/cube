@@ -67,7 +67,7 @@ Value* NIdentifier::codeGen(CodeGenContext& context)
     blocksCopy.pop();
   }
 
-  if (depth == maxDepth) {
+  if (depth >= maxDepth) {
     throw std::runtime_error("identifier " + name + " not found within " + std::to_string(depth) + " (maxDepth) blocks of the caller");
   }
 

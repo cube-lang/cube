@@ -38,10 +38,8 @@ int main(int argc, char **argv)
 
   CodeGenContext context;
   char* isDebug = std::getenv(debugEnvVar);
-  std::cout << isDebug << std::endl;
 
   if (isDebug != NULL && *isDebug == *debugEnvTrue) {
-    std::cout << "set debug to true" << std::endl;
     context.debug = true;
   }
 
