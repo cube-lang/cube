@@ -18,7 +18,7 @@ typedef std::vector<NInternalDeclaration*> InternalList;
 typedef std::vector<NFunction*> FunctionList;
 
 class Node {
- public:
+public:
   virtual ~Node() {}
   virtual llvm::Value* codeGen(CodeGenContext& context) { }
 };
@@ -30,25 +30,25 @@ class NStatement : public Node {
 };
 
 class NInteger : public NExpression {
- public:
+public:
   long long value;
 
- NInteger(long long value) : value(value) { }
+  NInteger(long long value) : value(value) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NDouble : public NExpression {
- public:
+public:
   double value;
 
- NDouble(double value) : value(value) { }
+  NDouble(double value) : value(value) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NString : public NExpression {
- public:
+public:
   std::string value;
 
   NString(std::string value) : value(value) { }
@@ -57,63 +57,64 @@ class NString : public NExpression {
 };
 
 class NIdentifier : public NExpression {
- public:
+  int assCount = 0;
+public:
   std::string name;
 
- NIdentifier(const std::string& name) : name(name) { }
+  NIdentifier(const std::string& name) : name(name) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NMethodCall : public NExpression {
- public:
+public:
   const NIdentifier& id;
   ExpressionList arguments;
 
- NMethodCall(const NIdentifier& id,
-             ExpressionList& arguments) :
-  id(id), arguments(arguments) { }
+  NMethodCall(const NIdentifier& id,
+              ExpressionList& arguments) :
+    id(id), arguments(arguments) { }
 
- NMethodCall(const NIdentifier& id) : id(id) { }
+  NMethodCall(const NIdentifier& id) : id(id) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NBinaryOperator : public NExpression {
- public:
+public:
   int op;
   NExpression& lhs;
   NExpression& rhs;
 
- NBinaryOperator(NExpression& lhs,
-                 int op,
-                 NExpression& rhs) :
-  lhs(lhs), rhs(rhs), op(op) { }
+  NBinaryOperator(NExpression& lhs,
+                  int op,
+                  NExpression& rhs) :
+    lhs(lhs), rhs(rhs), op(op) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NAssignment : public NExpression {
- public:
+public:
   NIdentifier& lhs;
   NExpression& rhs;
 
- NAssignment(NIdentifier& lhs,
-             NExpression& rhs) :
-  lhs(lhs), rhs(rhs) { }
+  NAssignment(NIdentifier& lhs,
+              NExpression& rhs) :
+    lhs(lhs), rhs(rhs) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NBlock : public NExpression {
- public:
+public:
   StatementList statements;
   NBlock() { }
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NProgram : public NExpression {
- public:
+public:
   const NIdentifier& package;
   NIdentifier *mode;
   NBlock programBlock;
@@ -132,98 +133,104 @@ class NProgram : public NExpression {
 };
 
 class NExpressionStatement : public NStatement {
- public:
+public:
   NExpression& expression;
 
- NExpressionStatement(NExpression& expression) :
-  expression(expression) { }
+  NExpressionStatement(NExpression& expression) :
+    expression(expression) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NVariableDeclaration : public NStatement {
- public:
+public:
   NIdentifier& type;
   NIdentifier& id;
   NExpression *assignmentExpr;
+  llvm::Type *lType;
 
- NVariableDeclaration(NIdentifier& type,
-                      NIdentifier& id) :
-  type(type), id(id) { }
+  NVariableDeclaration(NIdentifier& type,
+                       NIdentifier& id) :
+    type(type), id(id) { }
 
- NVariableDeclaration(NIdentifier& type,
-                      NIdentifier& id,
-                      NExpression *assignmentExpr) :
-  type(type), id(id), assignmentExpr(assignmentExpr) { }
+  NVariableDeclaration(NIdentifier& type,   // This can be comfortably set to anything; it's ignored
+                       llvm::Type *lType,
+                       NIdentifier& id) :
+    type(type), lType(lType), id(id) { }
+
+  NVariableDeclaration(NIdentifier& type,
+                       NIdentifier& id,
+                       NExpression *assignmentExpr) :
+    type(type), id(id), assignmentExpr(assignmentExpr) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NConstDeclaration : public NStatement {
- public:
+public:
   const NIdentifier& type;
   NIdentifier& id;
   NExpression *assignmentExpr;
 
- NConstDeclaration(const NIdentifier& type,
-                   NIdentifier& id) :
-  type(type), id(id) { }
+  NConstDeclaration(const NIdentifier& type,
+                    NIdentifier& id) :
+    type(type), id(id) { }
 
- NConstDeclaration(const NIdentifier& type,
-                   NIdentifier& id,
-                   NExpression *assignmentExpr) :
-  type(type), id(id), assignmentExpr(assignmentExpr) { }
+  NConstDeclaration(const NIdentifier& type,
+                    NIdentifier& id,
+                    NExpression *assignmentExpr) :
+    type(type), id(id), assignmentExpr(assignmentExpr) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NInternalDeclaration : public NStatement {
- public:
+public:
   const NIdentifier& type;
   NIdentifier& id;
   NExpression *assignmentExpr;
 
- NInternalDeclaration(const NIdentifier& type,
-                      NIdentifier& id) :
-  type(type), id(id) { }
+  NInternalDeclaration(const NIdentifier& type,
+                       NIdentifier& id) :
+    type(type), id(id) { }
 
- NInternalDeclaration(const NIdentifier& type,
-                      NIdentifier& id,
-                      NExpression *assignmentExpr) :
-  type(type), id(id), assignmentExpr(assignmentExpr) { }
+  NInternalDeclaration(const NIdentifier& type,
+                       NIdentifier& id,
+                       NExpression *assignmentExpr) :
+    type(type), id(id), assignmentExpr(assignmentExpr) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NFunctionDeclaration : public NStatement {
- public:
+public:
   NIdentifier& type;
   const NIdentifier& id;
   VariableList arguments;
   NBlock& block;
 
- NFunctionDeclaration(const NIdentifier& id,
-                      const VariableList& arguments,
-                      NIdentifier& type,
-                      NBlock& block) :
-   id(id), arguments(arguments), type(type), block(block) { }
+  NFunctionDeclaration(const NIdentifier& id,
+                       const VariableList& arguments,
+                       NIdentifier& type,
+                       NBlock& block) :
+    id(id), arguments(arguments), type(type), block(block) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NThingDeclaration : public NStatement {
- public:
+public:
   const NIdentifier& id;
   NBlock& block;
 
- NThingDeclaration(const NIdentifier& id,
-                   NBlock& block) :
-  id(id), block(block) { }
+  NThingDeclaration(const NIdentifier& id,
+                    NBlock& block) :
+    id(id), block(block) { }
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
 class NSuperDeclaration : public NStatement {
- public:
+public:
   const NIdentifier& thingID;
 
   NSuperDeclaration(const NIdentifier& thingID):
@@ -233,7 +240,7 @@ class NSuperDeclaration : public NStatement {
 };
 
 class NStdlibRequirementDeclaration : public NStatement {
- public:
+public:
   const NIdentifier& packageID;
 
   NStdlibRequirementDeclaration(const NIdentifier& packageID):
@@ -243,7 +250,7 @@ class NStdlibRequirementDeclaration : public NStatement {
 };
 
 class NRelativeRequirementDeclaration : public NStatement {
- public:
+public:
   const NIdentifier& packageID;
 
   NRelativeRequirementDeclaration(const NIdentifier& packageID):
@@ -253,7 +260,7 @@ class NRelativeRequirementDeclaration : public NStatement {
 };
 
 class NReturn : public NStatement {
- public:
+public:
   NExpression& expression;
 
   NReturn(NExpression& expression):

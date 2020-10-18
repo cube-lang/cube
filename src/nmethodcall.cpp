@@ -2,6 +2,10 @@
 #include "node.h"
 
 // NMethodCall returns IR code for calling functions
+//
+// TODO: how do we ensure that function is always valid? Can
+// we create a placeholder function, and then create it later
+// properly?
 Value* NMethodCall::codeGen(CodeGenContext& context)
 {
   Function *function = context.module->getFunction(id.name.c_str());

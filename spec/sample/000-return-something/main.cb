@@ -1,7 +1,11 @@
 package main
 
-f main() -> (status) {
-  var status exit_ok = 0
+var status exit_ok = 1
 
+f returner() -> (status) {
   return exit_ok
+}
+
+f main() -> (status) {
+  return returner()
 }

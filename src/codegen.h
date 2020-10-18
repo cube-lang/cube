@@ -35,6 +35,8 @@ static std::string extension = ".cb";
 static const char* debugEnvVar = "CUBE_DEBUG";
 static const char* debugEnvTrue = "1";
 
+static const int maxDepth = 10;
+
 class NProgram;
 class NIdentifier;
 
@@ -48,11 +50,9 @@ public:
 };
 
 class CodeGenContext {
-  std::stack<CodeGenBlock *> blocks;
-
 public:
-
-  bool debug;
+  std::stack<CodeGenBlock *> blocks;
+  bool debug = false;
   Module *module;
   CodeGenContext() { module = new Module("main", MyContext); }
 

@@ -9,7 +9,7 @@ extern "C" int yywrap() { }
 
 %%
 
-"//"                    return TOKEN(TCOMMENT);
+"//".*                  { /* DO NOTHING */ }
 "->"                    return TOKEN(TROCKET);
 "package"               return TOKEN(TPACKAGE);
 "require"               return TOKEN(TREQUIRE);
@@ -23,7 +23,7 @@ extern "C" int yywrap() { }
 
 [ \t\n]                 ;
 [a-zA-Z_][a-zA-Z0-9_]*  SAVE_TOKEN; return TIDENTIFIER;
-[0-9]+.[0-9]*           SAVE_TOKEN; return TDOUBLE;
+[0-9]+\.[0-9]+          SAVE_TOKEN; return TDOUBLE;
 [0-9]+                  SAVE_TOKEN; return TINTEGER;
 
 "="                     return TOKEN(TEQUAL);

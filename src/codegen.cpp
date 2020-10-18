@@ -17,7 +17,7 @@ void CodeGenContext::generateCode(NProgram& root)
   /* Create the top level interpreter function to call as entry */
   llvm::ArrayRef<Type*> argTypes;
 
-  FunctionType *ftype = FunctionType::get(Type::getInt32Ty(MyContext), makeArrayRef(argTypes), false);
+  FunctionType *ftype = FunctionType::get(Type::getInt64Ty(MyContext), makeArrayRef(argTypes), false);
   Function *main = Function::Create(ftype, GlobalValue::ExternalLinkage, realMain, module);
 
   BasicBlock *bblock = BasicBlock::Create(MyContext, "entry", main, 0);
@@ -40,6 +40,7 @@ void CodeGenContext::generateCode(NProgram& root)
   legacy::PassManager pm;
 
   if (debug) {
+    cout << "debug = true" << endl;
     pm.add(createPrintModulePass(outs()));
   }
 

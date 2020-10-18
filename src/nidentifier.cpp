@@ -2,18 +2,69 @@
 #include "node.h"
 
 // NIdentifier::codeGen returns a Value from a given identifier.
-// If a variable doesn't exist, this Value is taken from the globals
-// list.
 //
-// TODO: rather than reading directly from globals should the var not exist
-// in locals, iterate up through parents looking for variables until hitting
-// the top/ global level.
-// At this point return either NULL, or maybe even error
+// In order to do this we:
+//  1: Check whether the variable exists in the current block
+//    1.1: If so, we return that variable
+//  2: Else; we iterate up through the blocks looking for the necessary variable
+//    2.1: If we find it, we create a new local variable with the value
+//    2.2: We mark that variable as a rescoped variable (for when we want to mutate it later)
+//    2.3: We increment the assignment counter and re-run codegen
+//       2.3.1: This counter exists as a loop-break to avoid infinite loops in case our assignment messes up
+//
+// We have a maximum depth we crawl up through, to try and avoid broken loops and circular references. We also
+// bomb out if we make it all the way to the top without finding a var
 Value* NIdentifier::codeGen(CodeGenContext& context)
 {
-  if (context.locals().find(name) == context.locals().end()) {
-    // Get from global; or return NULL
-    return context.module->getGlobalVariable(name);
+  if (assCount > 1) {
+    throw std::runtime_error("stuck in a re-scope assignement loop, bailing");
   }
-  return new LoadInst(context.locals()[name], "", false, context.currentBlock());
+
+  // copy blocks
+  std::stack<CodeGenBlock *> blocksCopy;
+  blocksCopy = context.blocks;
+
+  int depth;
+  for (depth = 0; depth<= maxDepth; depth++) {
+    // get top block from contextCopy
+    CodeGenBlock* top = blocksCopy.top();
+    if (top == NULL) break;
+
+    if (top->locals.find(name) != top->locals.end()) {
+      // Create a local variable with this value
+      LoadInst* v = new LoadInst(top->locals[name], "", false, top->block);
+
+      if (depth == 0) {
+        return v;
+      }
+
+      // Create a temporary variable
+      NIdentifier emptyID = NIdentifier("");
+      NIdentifier nameID = NIdentifier(name);
+
+      NVariableDeclaration vd(emptyID, v->getType(), nameID);
+      vd.assignmentExpr = NULL;
+
+      Value* alloc = vd.codeGen(context);
+      if (alloc == NULL) {
+        throw std::runtime_error("could not assign re-scoped value " + name);
+      }
+
+      StoreInst* store = new StoreInst(v, alloc, false, context.currentBlock());
+      if (store == NULL) {
+        throw std::runtime_error("could not store temporary value " + name);
+      }
+
+      assCount++;
+      return this->codeGen(context);
+    }
+
+    blocksCopy.pop();
+  }
+
+  if (depth == maxDepth) {
+    throw std::runtime_error("identifier " + name + " not found within " + std::to_string(depth) + " (maxDepth) blocks of the caller");
+  }
+
+  throw std::runtime_error("identifier " + name + " does not exist");
 }

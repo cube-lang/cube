@@ -15,7 +15,7 @@ Type* typeOf(NIdentifier& type)
   }
   // Cube helper types
   else if (type.name.compare("status") == 0) {
-    return Type::getInt32Ty(MyContext);
+    return Type::getInt64Ty(MyContext);
   }
 
   // else if (type.name.compare("string") == 0) {

@@ -37,7 +37,13 @@ int main(int argc, char **argv)
   }
 
   CodeGenContext context;
-  context.debug = *std::getenv(debugEnvVar) == *debugEnvTrue;
+  char* isDebug = std::getenv(debugEnvVar);
+  std::cout << isDebug << std::endl;
+
+  if (isDebug != NULL && *isDebug == *debugEnvTrue) {
+    std::cout << "set debug to true" << std::endl;
+    context.debug = true;
+  }
 
   createPrintfFunction(context);
   context.generateCode(*programBlock);

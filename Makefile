@@ -25,7 +25,7 @@ OBJS = build/parser.o  \
 	build/nvariabledeclaration.o
 
 LLVMCONFIG = llvm-config
-CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++20 -lstdc++fs
+CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++20 -lstdc++fs -g
 LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses
 LIBS = `$(LLVMCONFIG) --system-libs --libs all` -L./build/ -L.
 
@@ -50,4 +50,4 @@ build/tokens.cpp: build/tokens.l build/parser.hpp
 
 
 cube: build/ $(COMMON) $(OBJS)
-	g++ -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
+	g++ -o $@ $(OBJS) $(LIBS) $(LDFLAGS) -O3
