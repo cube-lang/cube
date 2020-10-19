@@ -27,8 +27,7 @@ int main(int argc, char **argv)
       yyin = fopen(f.c_str(), "r+");
 
       if (yyin == NULL) {
-        std::cerr << "could not open " << entry << std::endl;
-        throw std::runtime_error("bailing");
+        throw CompilerParserException("could not read file " + f.string());
       }
 
       yyparse();
@@ -38,7 +37,7 @@ int main(int argc, char **argv)
   }
 
   if (loaded == 0) {
-    throw std::runtime_error("No files were found!");
+    throw CompilerParserException("no sube sources found");
   }
 
   CodeGenContext context;

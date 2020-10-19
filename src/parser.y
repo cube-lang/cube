@@ -64,7 +64,7 @@
 
 %%
 
-program : TPACKAGE ident stmts { programBlock = new NProgram(*$2, *$3); }
+program : TPACKAGE ident stmts { programBlock = new NProgram(currentFile, @$.first_line, @$.first_column, *$2, *$3); }
         ;
 
 stmts : stmt { $$ = new NBlock(); $$->statements.push_back($<stmt>1); }
@@ -111,7 +111,7 @@ func_decl_args : /*blank*/  { $$ = new VariableList(); }
           | func_decl_args TCOMMA var_decl { $1->push_back($<var_decl>3); }
           ;
 
-ident : TIDENTIFIER { $$ = new NIdentifier(*$1); delete $1; }
+ident : TIDENTIFIER { $$ = new NIdentifier(currentFile, @$.first_line, @$.first_column, *$1); delete $1; }
       ;
 
 numeric : TINTEGER { $$ = new NInteger(atol($1->c_str())); delete $1; }

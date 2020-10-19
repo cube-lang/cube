@@ -60,11 +60,12 @@ class NIdentifier : public NExpression {
   int assCount = 0;
 public:
   std::string name;
+  std::string file;
   int line;
   int col;
 
   NIdentifier(const std::string& name) : name(name) { }
-  NIdentifier(int line, int col, const std::string& name) : line(line), col(col), name(name) { }
+  NIdentifier(std::string file, int line, int col, const std::string& name) : file(file), line(line), col(col), name(name) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
@@ -131,6 +132,10 @@ public:
   const NIdentifier& package;
   NIdentifier *mode;
   NBlock programBlock;
+  int line;
+  int col;
+  std::string file;
+
 
   NProgram(NIdentifier& package,
            NBlock& programBlock) :
@@ -140,6 +145,14 @@ public:
            NIdentifier *mode,
            NBlock& programBlock):
     package(package), mode(mode), programBlock(programBlock) { }
+
+  NProgram(std::string file,
+           int line,
+           int col,
+           NIdentifier& package,
+           NBlock& programBlock):
+    file(file), line(line), col(col), package(package), mode(mode), programBlock(programBlock) { }
+
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
   bool isSvelte();

@@ -1,4 +1,5 @@
 #include "codegen.h"
+#include "exceptions.h"
 #include "node.h"
 
 static std::string rescopeRename(std::string name, int depth);
@@ -19,7 +20,7 @@ static std::string rescopeRename(std::string name, int depth);
 Value* NIdentifier::codeGen(CodeGenContext& context)
 {
   if (assCount > 1) {
-    throw std::runtime_error("stuck in a re-scope assignement loop, bailing");
+    throw UnexpectedLoopException("stuck in a re-scope assignement loop for " + name);
   }
 
   // copy blocks
@@ -51,12 +52,12 @@ Value* NIdentifier::codeGen(CodeGenContext& context)
 
       Value* alloc = vd.codeGen(context);
       if (alloc == NULL) {
-        throw std::runtime_error("could not assign re-scoped value " + tmpName);
+        throw RescopeSaveException(file, line, col, "could not assign re-scoped value " + tmpName);
       }
 
       StoreInst* store = new StoreInst(v, alloc, false, context.currentBlock());
       if (store == NULL) {
-        throw std::runtime_error("could not store temporary value " + tmpName);
+        throw RescopeSaveException(file, line, col, "could not store temporary value " + tmpName);
       }
 
       assCount++;
@@ -68,10 +69,10 @@ Value* NIdentifier::codeGen(CodeGenContext& context)
   }
 
   if (depth >= maxDepth) {
-    throw std::runtime_error("identifier " + name + " not found within " + std::to_string(depth) + " (maxDepth) blocks of the caller");
+    throw NoSuchIdentifierException(file, line, col, "identifier " + name + " not found within " + std::to_string(depth) + " (maxDepth) blocks of the caller");
   }
 
-  throw std::runtime_error("identifier " + name + " does not exist");
+  throw NoSuchIdentifierException(file, line, col, "identifier " + name + " does not exist");
 }
 
 static std::string rescopeRename(std::string name, int depth)

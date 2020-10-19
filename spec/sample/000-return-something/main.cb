@@ -1,17 +1,7 @@
 package main
 
-var status exit_ok = 99
-
-f adder() -> (void) {
-  exit_ok = exit_ok + 1
-}
-
-f returner() -> (status) {
-  return exit_ok
-}
+var status exit_ok = 0
 
 f main() -> (status) {
-   adder()
-   adder()
-   return returner()
+  return exit_ok
 }

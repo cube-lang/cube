@@ -1,5 +1,6 @@
-#include "node.h"
 #include "codegen.h"
+#include "exceptions.h"
+#include "node.h"
 #include "parser.hpp"
 
 using namespace std;
@@ -11,7 +12,7 @@ void CodeGenContext::generateCode(NProgram& root)
   std::string packageName = root.package.name;
 
   if (packageName != execPackage) {
-    throw std::runtime_error("invalid package " + packageName + ". expected " + execPackage);
+    throw ExecutablePackageNameException("invalid package " + packageName + ". expected " + execPackage);
   }
 
   /* Create the top level interpreter function to call as entry */
@@ -28,7 +29,7 @@ void CodeGenContext::generateCode(NProgram& root)
 
   Function* userMainF = module->getFunction(userMain);
   if (userMainF == NULL) {
-    throw std::runtime_error("invalid program, missing main() function");
+    throw ExecutablePackageEntrypointException();
   }
 
   llvm::ArrayRef<Value*> argValues;
@@ -87,14 +88,14 @@ void CodeGenContext::buildAndWriteObject() {
   raw_fd_ostream dest(Filename, EC, sys::fs::OF_None);
 
   if (EC) {
-    throw std::runtime_error(EC.message());
+    throw CompilerObjectException(EC.message());
   }
 
   legacy::PassManager pass;
   auto FileType = CGFT_ObjectFile;
 
   if (TheTargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
-    throw std::runtime_error("TheTargetMachine can't emit a file of this type");
+    throw CompilerObjectException("TheTargetMachine can't emit a file of this type");
   }
 
   pass.run(*module);
