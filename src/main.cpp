@@ -1,7 +1,9 @@
 #include <filesystem>
 #include <iostream>
 #include "codegen.h"
+#include "exceptions.h"
 #include "node.h"
+#include "parser.h"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -9,6 +11,8 @@ namespace fs = std::filesystem;
 extern int yyparse();
 extern FILE* yyin;
 extern NProgram* programBlock;
+
+std::string currentFile;
 
 llvm::Function* createPrintfFunction(CodeGenContext& context);
 
@@ -19,6 +23,7 @@ int main(int argc, char **argv)
     fs::path f = entry.path();
 
     if (f.has_extension() && f.extension() == extension) {
+      currentFile = f;
       yyin = fopen(f.c_str(), "r+");
 
       if (yyin == NULL) {
@@ -44,8 +49,21 @@ int main(int argc, char **argv)
   }
 
   createPrintfFunction(context);
-  context.generateCode(*programBlock);
-  context.buildAndWriteObject();
+
+  try {
+    context.generateCode(*programBlock);
+    context.buildAndWriteObject();
+  }
+  catch(CubeException &e) {
+    std::cerr << argv[0] << ": compilation failed with exception " << e.id << std::endl;
+    std::cerr << "\t" << e.message << std::endl;
+
+    if (e.knowsWhere()) {
+      std::cerr << "\tat " + e.loc() << std::endl;
+    }
+
+    return exceptionExit;
+  }
 
   return 0;
 }

@@ -1,5 +1,6 @@
 %{
     #include "node.h"
+    #include "parser.h"
     NProgram *programBlock; /* the top level root node of our final AST */
 
     extern int yylex();
@@ -52,6 +53,12 @@
 /* Operator precedence for mathematical operators */
 %left TPLUS TMINUS
 %left TMUL TDIV
+
+/*
+ Track locations of symbols to allow for better error messages
+ in the compiler
+*/
+%locations
 
 %start program
 
@@ -117,13 +124,13 @@ string : TDQUOTE string_chars TDQUOTE { $$ = new NString(*$2); }
 string_chars : TCHAR | string_chars TCHAR
              ;
 
-expr : ident TEQUAL expr { $$ = new NAssignment(*$<ident>1, *$3); }
+expr : ident TEQUAL expr { $$ = new NAssignment(currentFile, @$.first_line, @$.first_column, *$<ident>1, *$3); }
      | ident TLPAREN call_args TRPAREN { $$ = new NMethodCall(*$1, *$3); delete $3; }
      | ident { $<ident>$ = $1; }
      | numeric
      | expr comparison expr { $$ = new NBinaryOperator(*$1, $2, *$3); }
      | TLPAREN expr TRPAREN { $$ = $2; }
-     ;
+    ;
 
 call_args : /*blank*/  { $$ = new ExpressionList(); }
           | expr { $$ = new ExpressionList(); $$->push_back($1); }

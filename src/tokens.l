@@ -2,10 +2,15 @@
 #include <string>
 #include "node.h"
 #include "parser.hpp"
+
 #define SAVE_TOKEN yylval.string = new std::string(yytext, yyleng)
 #define TOKEN(t) (yylval.token = t)
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
+
 extern "C" int yywrap() { }
 %}
+
+%option yylineno
 
 %%
 

@@ -60,8 +60,11 @@ class NIdentifier : public NExpression {
   int assCount = 0;
 public:
   std::string name;
+  int line;
+  int col;
 
   NIdentifier(const std::string& name) : name(name) { }
+  NIdentifier(int line, int col, const std::string& name) : line(line), col(col), name(name) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
@@ -98,10 +101,20 @@ class NAssignment : public NExpression {
 public:
   NIdentifier& lhs;
   NExpression& rhs;
+  int line;
+  int col;
+  std::string file;
 
   NAssignment(NIdentifier& lhs,
               NExpression& rhs) :
     lhs(lhs), rhs(rhs) { }
+
+  NAssignment(std::string file,
+              int line,
+              int col,
+              NIdentifier& lhs,
+              NExpression& rhs) :
+    file(file), line(line), col(col), lhs(lhs), rhs(rhs) { }
 
   virtual llvm::Value* codeGen(CodeGenContext& context);
 };
