@@ -29,7 +29,7 @@ class CubeException : public exception {
 
   const char* what() const noexcept { return message.c_str(); }
   std::string loc() { return file + " line: " + std::to_string(line) + ", col: " + std::to_string(col); }
-  bool knowsWhere() { return line != 0 && col != 0; }
+  bool knowsWhere() { return line != 1 && col != 1; }
 };
 
 class CompilerParserException : public CubeException {
