@@ -1,0 +1,7 @@
+package main
+
+var status exit_ok = 0
+
+f main() -> (status) {
+  return exit_ok
+}

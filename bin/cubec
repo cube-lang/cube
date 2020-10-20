@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+$DIR/../cube
+gcc -fPIE _output.o -o $(basename ${PWD})
+rm _output.o

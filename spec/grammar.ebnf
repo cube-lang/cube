@@ -1,0 +1,56 @@
+Program = PackageDef {Element}.
+
+PackageDef = "package" PackageName.
+PackageName = Lowercase {Lowercase}.
+
+Element = (Comment | Newline | Requirement | Thing | Function | FunctionCall | Var | Const).
+
+Comment = CommentStart { Words } Newline.
+CommentStart = "//".
+
+Requirement = "require" StdlibRequire | RelativeRequire.
+StdlibRequire = "<" {Alpha | Symbol} ">".
+RelativeRequire = "\"" {Alpha | Symbol} "\"".
+
+Thing = "thing" Identifier OpenBrace Newline {Super | Internal | Element} Newline CloseBrace.
+Super = "super" ExternalIdentifier Newline.
+
+Function = "f" Identifier Args Rocket Args OpenBrace Newline {Element} Newline CloseBrace.
+FunctionCall = ExternalIdentifier Args.
+
+Internal = "internal" Identifier Assignment Newline.
+Var = "var" Identifier Assignment Newline.
+Const =  "const" Identifier Assignment Newline.
+
+// First Identifier is a Var name can be omitted or set to "_" to ignore
+Arg = [Identifier | "_"] SomeWhitespace Identifier.
+Args = OpenBracket {Arg} CloseBracket.
+
+Identifier = {Alpha}.
+ExternalIdentifier = Lowercase {Lowercase} "." Uppercase {Alpha}.
+
+Assignment = Arg "=" (Quotes Words Quotes) | Number | Alpha | FunctionCall.
+
+// Just all kinds of arbitrary values and stuff
+Lowercase = "a...z".
+Uppercase = "A...Z".
+Symbol = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">" | "\\" | "=" | "|" | "." | "." | "/" | "-" | "_".
+Numeral = "0...9".
+
+OpenBrace = "{".
+CloseBrace = "}".
+
+OpenBracket = "(".
+CloseBracket = ")".
+
+Rocket = "->".
+
+Alpha = Lowercase | Uppercase.
+Number = Numeral {"." | Numeral}.
+ANS = Lowercase | Uppercase | Symbol | Whitespace.
+Words = ANS {ANS}.
+Quotes = "\"" | "'".
+
+Whitespace = " " | "\t".
+SomeWhitespace = Whitespace {Whitespace}.
+Newline = "\n" | "\r\n".
