@@ -4,112 +4,62 @@
 
 cube is a toy language I'm mucking about with. It might work, it might not.
 
-## Sample
+## Hello World
 
 ```
 package main
 
-// Requirements wrapped in <> come from the stdlib
-//
-// Additonally, the cube package contains a series of helpers
-// and extra wrappers, such as the base super Thing, some checks
-// around errors, and so on.
-//
-// This functionality exists in a separate package, rather than it being
-// included for free, to allow for custom implementations/ cuts where
-// binary size is an issue
-require <cube>
-require <errors>
 require <fmt>
-require <system>
 
-// Otherwise, requirements are paths and are read, in order, from:
-//    1. The local directory
-//    2. The '.dist/src' directory
-require "some/directory"
-
-// A thing (or anything, really) started with a capital letter
-// will be exported; in much the same way as in go.
-thing Cube {
-    // Super will set the superthing that functions in this thing overwrite.
-    //
-    // The basic cube.Thing superthing contains an init() function that always
-    // returns no error, and some helpful metafunctions for checking variables
-    // and so on
-    super cube.Thing
-
-    // Any exported var in a thing can be set as a named parameter, when
-    // the thing is instantiated, so in this case: Cube.New(Name: "Bart Simpson")
-    //
-    // The initial value of a var defined in this was acts as the default, for when
-    // vars are unset
-    var Name string = "default"
-
-    // A var without a default will start as null. In this case, the init function
-    // (see below) is the place to check whether set, and to return errors when not
-    var Age integer
-
-    // Internals are values which have a getter, but no setter. They're
-    // set in functions, often in the init function.
-    internal Greeting string
-
-    // An init function is run when a thing is instantiated. The order is:
-    //   1. A thing is instantiated with named parameters
-    //   2. The init() function is called
-    //   3. Cube returns an object and an error
-    //
-    // The init function is expected to return an error/ null- the super
-    // init function, for instance, returns null
-    f init() -> (error) {
-        // Greeting is scoped to this instance of this thing
-        Greeting = fmt.Sprintf("Hello, %s!", Name)
-
-        return null
-    }
-
-    // SayHello returns a string and an error. This is a good convention,
-    // but realistically not everything needs to error.
-    f SayHello() -> (string, error) {
-        return Greeting, null
-    }
-
-    f CheckAdult() -> (error) {
-        if Age < 18 {
-            return errors.Invalid(fmt.Sprintf("age %d is too young to be an adult", Age))
-        }
-
-        return null
-    }
-}
+var OK = 0
 
 // The entrypoint of an application is main.main
-// This entryopint is expected to return an exit status.
-f main() -> (int) {
-    // New takes named params built from declared vars in a Thing
-    var c Cube
-    c, err = Cube.New(Name: "James", Age: 32)
-    if err != null {
-        // system.Panic prints an error message, a stack trace, and
-        // returns -255 - the exit status signifying a shitshow of
-        // a core dump
-        system.Panic(err)
-    }
+// This entryopint is expected to return an exit status (a status is a type derievd from
+// an int64).
+f main() -> (status) {
+    fmt.Println("Hello, World!")
 
-    // A variable, not prefixed with 'var', has no guarantees on type safety
-    // or that a later assignment wont replace the value with something of a
-    // different type. Bloody fast, though.
-    //
-    // Additionally, wrapping in cube.Must will take functions of return signature
-    // `(somevalue, error)`, returning 'somevalue' or panicking if error is not Null
-    greeting = cube.Must(c.SayHello())
-    fmt.Println(greeting)
-
-    // cube.Validate takes a function which accepts solely an error and either
-    // panics or does nothing, based on whether there's an error or not
-    cube.Validate(c.CheckAdult())
-
-    // System contains some helper exit statuses in order to set some sensible
-    // statuses
-    return system.OK
+    return OK
 }
 ```
+
+## Test Compilation
+
+This repo contains the script [bin/cubec](bin/cubec) which does the necessary compile/ link steps to build a binary:
+
+
+```bash
+$ ${CUBE_SRC}/bin/cubec
+```
+
+This will build a binary from cube sources in the working directory. To see an IR of what the compiler is building, set `CUBE_DEBUG-=1`.
+
+## Spec
+
+The cube language spec can be found as an EBNF grammar in [spec/grammar.ebnf](spec/grammar.ebnf), or as a bison parser input at [src/parser.y](src/parser.y). The grammar defined in both files should be identical.
+
+## Effective Errors
+
+Compiler errors are prefixed with an exception ID which should aid in debugging. They also show the precise line an error is in:
+
+```
+cube: compilation failed with exception C002
+        identifier 'exit_ok' does not exist
+        at ./main.cb line: 6, col: 1
+```
+
+In this case, exception C002. The meaning of these exceptions can be found in [src/exceptions.h](src/exceptions.h).
+
+## Licence
+
+Copyright 2020 James Condron
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
