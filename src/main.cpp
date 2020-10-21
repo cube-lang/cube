@@ -37,7 +37,11 @@ int main(int argc, char **argv)
   }
 
   if (loaded == 0) {
-    throw CompilerParserException("no sube sources found");
+    throw CompilerParserException("no cube sources found");
+  }
+
+  if (programBlock == NULL) {
+    throw CompilerParserException("an error occurred in parsing cube sources");
   }
 
   CodeGenContext context;
