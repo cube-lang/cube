@@ -4,7 +4,7 @@
     NProgram *programBlock; /* the top level root node of our final AST */
 
     extern int yylex();
-    void yyerror(const char *s) { printf("ERROR: %sn", s); }
+    void yyerror(const char *s) { printf("ERROR: %s\nat: %s", s, currentFile); }
 %}
 
 /* Represents the many different ways we can access our data */
@@ -59,6 +59,7 @@
  in the compiler
 */
 %locations
+%define parse.error custom
 
 %start program
 
@@ -142,3 +143,49 @@ comparison : TCEQ | TCNE | TCLT | TCLE | TCGT | TCGE
            ;
 
 %%
+
+/* YY_LOCATION_PRINT -- Print the location on the stream.
+   This macro was not mandated originally: define only if we know
+   we won't break user code: when these are the locations we know.  */
+
+#ifndef YY_LOCATION_PRINT
+# if YYLTYPE_IS_TRIVIAL
+#  define YY_LOCATION_PRINT(File, Loc)                  \
+     fprintf (File, "line: %d, col: %d",                      \
+              (Loc).first_line, (Loc).first_column)
+# else
+#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+# endif
+#endif
+
+// Custom syntax error report. See: https://www.gnu.org/software/bison/manual/html_node/Syntax-Error-Reporting-Function.html
+// (which is where this function is lifted almost verbatim from)
+static int
+yyreport_syntax_error (const yypcontext_t *ctx)
+{
+  int res = 0;
+  fprintf(stderr, "%s, ", currentFile);
+  YY_LOCATION_PRINT (stderr, *yypcontext_location (ctx));
+  fprintf (stderr, ": syntax error");
+  // Report the tokens expected at this point.
+  {
+    enum { TOKENMAX = 5 };
+    yysymbol_kind_t expected[TOKENMAX];
+    int n = yypcontext_expected_tokens (ctx, expected, TOKENMAX);
+    if (n < 0)
+      // Forward errors to yyparse.
+      res = n;
+    else
+      for (int i = 0; i < n; ++i)
+        fprintf (stderr, "%s %s",
+                 i == 0 ? ": expected" : " or", yysymbol_name (expected[i]));
+  }
+  // Report the unexpected token.
+  {
+    yysymbol_kind_t lookahead = yypcontext_token (ctx);
+    if (lookahead != YYSYMBOL_YYEMPTY)
+      fprintf (stderr, " before %s", yysymbol_name (lookahead));
+  }
+  fprintf (stderr, "\n");
+  return res;
+}
