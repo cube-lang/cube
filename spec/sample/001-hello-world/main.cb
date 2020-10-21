@@ -1,0 +1,10 @@
+package main
+
+var status ok = 0
+var string greeting = "Hello, world!\n"
+
+f main() -> (status) {
+  printf(greeting)
+
+  return ok
+}
