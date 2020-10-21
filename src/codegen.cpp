@@ -45,7 +45,7 @@ void CodeGenContext::generateCode(NProgram& root)
     pm.add(createPrintModulePass(outs()));
   }
 
-  pm.add(createInstructionCombiningPass());
+  //pm.add(createInstructionCombiningPass());   // Disable: external function calls fucking shit it here
   pm.add(createReassociatePass());
   pm.add(createGVNPass());
   pm.add(createCFGSimplificationPass());
