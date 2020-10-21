@@ -28,12 +28,12 @@
    match our tokens.l lex file. We also define the node type
    they represent.
  */
-%token <string> TIDENTIFIER TINTEGER TDOUBLE
+%token <string> TIDENTIFIER TINTEGER TDOUBLE TSTRING
 %token <token> TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL
 %token <token> TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT
 %token <token> TPLUS TMINUS TMUL TDIV TDQUOTE TSQUOTE
 
-%token  <token>         TCOMMENT TROCKET TPACKAGE TREQUIRE TVAR TRETURN TCHAR
+%token  <token>         TCOMMENT TROCKET TPACKAGE TREQUIRE TVAR TRETURN
 %token  <token>         TCONST TINTERNAL TTHING TSUPER TFUNC TRSQUARE TLSQUARE
 %token  <token>         TSTRTYPE TINTTYPE TFLOATTYPE
 
@@ -43,11 +43,11 @@
    calling an (NIdentifier*). It makes the compiler happy.
  */
 %type <ident> ident
-%type <expr> numeric expr string string_chars
+%type <expr> numeric expr string
 %type <varvec> func_decl_args
 %type <exprvec> call_args
 %type <block> program stmts block
-%type <stmt> stmt var_decl func_decl const_decl internal_decl super_decl thing_decl require_decl ret
+%type <stmt> stmt var_decl func_decl const_decl internal_decl super_decl thing_decl require_decl
 %type <token> comparison
 
 /* Operator precedence for mathematical operators */
@@ -119,16 +119,14 @@ numeric : TINTEGER { $$ = new NInteger(atol($1->c_str())); delete $1; }
         | TDOUBLE { $$ = new NDouble(atof($1->c_str())); delete $1; }
         ;
 
-string : TDQUOTE string_chars TDQUOTE { $$ = new NString(*$2); }
+string : TSTRING { $$ = new NString(*$1); delete $1; }
        ;
-
-string_chars : TCHAR | string_chars TCHAR
-             ;
 
 expr : ident TEQUAL expr { $$ = new NAssignment(currentFile, @$.first_line, @$.first_column, *$<ident>1, *$3); }
      | ident TLPAREN call_args TRPAREN { $$ = new NMethodCall(*$1, *$3); delete $3; }
      | ident { $<ident>$ = $1; }
      | numeric
+     | string
      | expr comparison expr { $$ = new NBinaryOperator(*$1, $2, *$3); }
      | TLPAREN expr TRPAREN { $$ = $2; }
     ;
