@@ -1,1 +1,0 @@
-extern std::string currentFile;

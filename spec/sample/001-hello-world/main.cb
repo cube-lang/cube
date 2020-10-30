@@ -1,0 +1,7 @@
+package main
+
+var string greeting = "Hello, world!"
+
+f main() -> (status) {
+  return 1
+}
