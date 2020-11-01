@@ -19,6 +19,7 @@ const (
 	BRACEL                  //13
 	RETURN                  //14
 	BRACER                  //15
+	COMMA                   //16
 )
 
 var tokens = []tokInp{
@@ -38,4 +39,5 @@ var tokens = []tokInp{
 	{"}", BRACER},                   //13
 	{"return", RETURN},              //14
 	{"[a-zA-Z][a-zA-Z0-9]*", IDENT}, //15
+	{",", COMMA},                    //16
 }
